@@ -1,5 +1,5 @@
 # Antigravity Tools 🚀
-> 专业的 AI 账号管理与协议反代系统 (v3.3.46)
+> 专业的 AI 账号管理与协议反代系统 (v3.3.47)
 <div align="center">
   <img src="public/icon.png" alt="Antigravity Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
 
@@ -8,7 +8,7 @@
   
   <p>
     <a href="https://github.com/lbjlaq/Antigravity-Manager">
-      <img src="https://img.shields.io/badge/Version-3.3.46-blue?style=flat-square" alt="Version">
+      <img src="https://img.shields.io/badge/Version-3.3.47-blue?style=flat-square" alt="Version">
     </a>
     <img src="https://img.shields.io/badge/Tauri-v2-orange?style=flat-square" alt="Tauri">
     <img src="https://img.shields.io/badge/Backend-Rust-red?style=flat-square" alt="Rust">
@@ -226,9 +226,76 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
+### 如何使用图片生成 (Imagen 3)?
+
+#### 方式一：OpenAI Images API (推荐)
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="sk-antigravity",
+    base_url="http://127.0.0.1:8045/v1"
+)
+
+# 生成图片
+response = client.images.generate(
+    model="gemini-3-pro-image",
+    prompt="一座未来主义风格的城市，赛博朋克，霓虹灯",
+    size="1920x1080",      # 支持任意 WIDTHxHEIGHT 格式，自动计算宽高比
+    quality="hd",          # "standard" | "hd" | "medium"
+    n=1,
+    response_format="b64_json"
+)
+
+# 保存图片
+import base64
+image_data = base64.b64decode(response.data[0].b64_json)
+with open("output.png", "wb") as f:
+    f.write(image_data)
+```
+
+**支持的参数**：
+- **`size`**: 任意 `WIDTHxHEIGHT` 格式（如 `1280x720`, `1024x1024`, `1920x1080`），自动计算并映射到标准宽高比（21:9, 16:9, 9:16, 4:3, 3:4, 1:1）
+- **`quality`**: 
+  - `"hd"` → 4K 分辨率（高质量）
+  - `"medium"` → 2K 分辨率（中等质量）
+  - `"standard"` → 默认分辨率（标准质量）
+- **`n`**: 生成图片数量（1-10）
+- **`response_format`**: `"b64_json"` 或 `"url"`（Data URI）
+
+#### 方式二：Chat 接口 + 模型后缀
+```python
+response = client.chat.completions.create(
+    model="gemini-3-pro-image-16-9-4k",  # 格式：gemini-3-pro-image-[比例]-[质量]
+    messages=[{"role": "user", "content": "一座未来主义风格的城市"}]
+)
+```
+
+**模型后缀说明**：
+- **宽高比**: `-16-9`, `-9-16`, `-4-3`, `-3-4`, `-21-9`, `-1-1`
+- **质量**: `-4k` (4K), `-2k` (2K), 不加后缀（标准）
+- **示例**: `gemini-3-pro-image-16-9-4k` → 16:9 比例 + 4K 分辨率
+
+
 ## 📝 开发者与社区
 
 *   **版本演进 (Changelog)**:
+    *   **v3.3.47 (2026-01-21)**:
+        -   **[核心修复] 图片生成 API 参数映射增强 (Fix Issue #911)**:
+            -   **问题背景**: `/v1/images/generations` 端点存在两个参数映射缺陷:
+                - `size` 参数只支持硬编码的特定尺寸字符串,OpenAI 标准尺寸(如 `1280x720`)会被错误地回退到 `1:1` 比例
+                - `quality` 参数仅用于 Prompt 增强,未映射到 Gemini 的 `imageSize`,无法控制输出图片的物理分辨率
+            -   **修复内容**:
+                - **扩展 `common_utils.rs`**: 新增 `parse_image_config_with_params` 函数,支持从 OpenAI 参数(`size`, `quality`)解析图片配置
+                - **动态宽高比计算**: 新增 `calculate_aspect_ratio_from_size` 函数,使用数学计算替代硬编码匹配,支持任意 `WIDTHxHEIGHT` 格式
+                - **统一配置解析**: 修改 `handle_images_generations` 函数,删除硬编码映射,调用统一的配置解析函数
+                - **参数映射**: `quality: "hd"` → `imageSize: "4K"`, `quality: "medium"` → `imageSize: "2K"`
+            -   **测试验证**: 新增 8 个单元测试,覆盖 OpenAI 参数解析、动态计算、向后兼容等场景,全部通过
+            -   **兼容性保证**:
+                - ✅ 向后兼容: Chat 路径(如 `gemini-3-pro-image-16-9-4k`)仍正常工作
+                - ✅ 渐进增强: 支持更多 OpenAI 标准尺寸,`quality` 参数正确映射
+                - ✅ 无破坏性变更: Claude、Vertex、Gemini 协议不受影响
+            -   **影响范围**: 解决了 OpenAI Images API 的参数映射问题,所有协议通过 `common_utils` 自动获得改进
     *   **v3.3.46 (2026-01-20)**:
         -   **[功能增强] Token 使用统计 (Token Stats) 深度优化与国际化标准化 (PR #892)**:
             -   **UI/UX 统一**: 实现了自定义 Tooltip 组件，统一了面积图、柱状图和饼图的悬浮提示样式，增强了深色模式下的对比度与可读性。

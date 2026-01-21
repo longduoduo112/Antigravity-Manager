@@ -1,5 +1,5 @@
 # Antigravity Tools 🚀
-> Professional AI Account Management & Proxy System (v3.3.46)
+> Professional AI Account Management & Proxy System (v3.3.47)
 
 <div align="center">
   <img src="public/icon.png" alt="Antigravity Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
@@ -9,7 +9,7 @@
   
   <p>
     <a href="https://github.com/lbjlaq/Antigravity-Manager">
-      <img src="https://img.shields.io/badge/Version-3.3.46-blue?style=flat-square" alt="Version">
+      <img src="https://img.shields.io/badge/Version-3.3.47-blue?style=flat-square" alt="Version">
     </a>
     <img src="https://img.shields.io/badge/Tauri-v2-orange?style=flat-square" alt="Tauri">
     <img src="https://img.shields.io/badge/Backend-Rust-red?style=flat-square" alt="Rust">
@@ -211,6 +211,22 @@ print(response.choices[0].message.content)
 ## 📝 Developer & Community
 
 *   **Changelog**:
+    *   **v3.3.47 (2026-01-21)**:
+        -   **[Core Fix] Image Generation API Parameter Mapping Enhancement (Fix Issue #911)**:
+            -   **Background**: The `/v1/images/generations` endpoint had two parameter mapping defects:
+                - The `size` parameter only supported hardcoded specific dimension strings; OpenAI standard sizes (like `1280x720`) were incorrectly fallback to `1:1` aspect ratio
+                - The `quality` parameter was only used for Prompt enhancement and not mapped to Gemini's `imageSize`, unable to control the physical resolution of output images
+            -   **Fix Details**:
+                - **Extended `common_utils.rs`**: Added `parse_image_config_with_params` function to support parsing image configuration from OpenAI parameters (`size`, `quality`)
+                - **Dynamic Aspect Ratio Calculation**: Added `calculate_aspect_ratio_from_size` function, using mathematical calculation instead of hardcoded matching, supporting any `WIDTHxHEIGHT` format
+                - **Unified Configuration Parsing**: Modified `handle_images_generations` function, removed hardcoded mapping, calling unified configuration parsing function
+                - **Parameter Mapping**: `quality: "hd"` → `imageSize: "4K"`, `quality: "medium"` → `imageSize: "2K"`
+            -   **Test Verification**: Added 8 unit tests covering OpenAI parameter parsing, dynamic calculation, backward compatibility scenarios, all passing
+            -   **Compatibility Guarantee**:
+                - ✅ Backward Compatible: Chat path (like `gemini-3-pro-image-16-9-4k`) still works normally
+                - ✅ Progressive Enhancement: Supports more OpenAI standard sizes, `quality` parameter correctly mapped
+                - ✅ No Breaking Changes: Claude, Vertex, Gemini protocols unaffected
+            -   **Impact**: Resolved OpenAI Images API parameter mapping issues, all protocols automatically benefit through `common_utils`
     *   **v3.3.46 (2026-01-20)**:
         -   **[Enhancement] Deep Optimization & i18n Standardization for Token Stats (PR #892)**:
             -   **Unified UI/UX**: Implemented custom Tooltip components to unify hover styles across Area, Bar, and Pie charts, enhancing contrast and readability in Dark Mode.

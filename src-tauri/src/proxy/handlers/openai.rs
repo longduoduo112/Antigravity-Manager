@@ -1107,17 +1107,14 @@ pub async fn handle_images_generations(
         style
     );
 
-    // 2. 解析尺寸为宽高比
-    let aspect_ratio = match size {
-        "1792x768" | "2560x1080" => "21:9", // Ultra-wide
-        "1792x1024" | "1920x1080" => "16:9",
-        "1024x1792" | "1080x1920" => "9:16",
-        "1024x768" | "1280x960" => "4:3",
-        "768x1024" | "960x1280" => "3:4",
-        _ => "1:1", // 默认 1024x1024
-    };
+    // 2. 使用 common_utils 解析图片配置（统一逻辑，支持动态计算宽高比和 quality 映射）
+    let (image_config, _) = crate::proxy::mappers::common_utils::parse_image_config_with_params(
+        model,
+        Some(size),
+        Some(quality)
+    );
 
-    // Prompt Enhancement
+    // 3. Prompt Enhancement（保留原有逻辑）
     let mut final_prompt = prompt.to_string();
     if quality == "hd" {
         final_prompt.push_str(", (high quality, highly detailed, 4k resolution, hdr)");
@@ -1128,7 +1125,7 @@ pub async fn handle_images_generations(
         _ => {}
     }
 
-    // 3. 获取 Token
+    // 4. 获取 Token
     let upstream = state.upstream.clone();
     let token_manager = state.token_manager;
 
@@ -1145,7 +1142,7 @@ pub async fn handle_images_generations(
 
     info!("✓ Using account: {} for image generation", email);
 
-    // 4. 并发发送请求 (解决 candidateCount > 1 不支持的问题)
+    // 5. 并发发送请求 (解决 candidateCount > 1 不支持的问题)
     let mut tasks = Vec::new();
 
     for _ in 0..n {
@@ -1153,7 +1150,7 @@ pub async fn handle_images_generations(
         let access_token = access_token.clone();
         let project_id = project_id.clone();
         let final_prompt = final_prompt.clone();
-        let aspect_ratio = aspect_ratio.to_string();
+        let image_config = image_config.clone(); // 使用解析后的完整配置
         let _response_format = response_format.to_string();
 
         tasks.push(tokio::spawn(async move {
@@ -1170,9 +1167,7 @@ pub async fn handle_images_generations(
                     }],
                     "generationConfig": {
                         "candidateCount": 1, // 强制单张
-                        "imageConfig": {
-                            "aspectRatio": aspect_ratio
-                        }
+                        "imageConfig": image_config // ✅ 使用完整配置（包含 aspectRatio 和 imageSize）
                     },
                     "safetySettings": [
                         { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "OFF" },
