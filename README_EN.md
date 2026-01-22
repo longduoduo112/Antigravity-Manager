@@ -215,6 +215,9 @@ print(response.choices[0].message.content)
     *   **v3.3.49 (2026-01-22)**:
         -   **[UX Optimization] Immediate Effect of Settings (Fix PR #949)**:
             -   **Instant Apply**: Fixed an issue where language changes required manual saving. Adjustments now apply immediately across the UI.
+        -   **[Code Cleanup] Backend Architecture Refactoring & Optimization (PR #950)**:
+            -   **Streamlining**: Deeply refactored mapping and handling logic within the proxy layer. Removed redundant modules (e.g., `openai/collector.rs`) to significantly improve maintainability.
+            -   **Stability Boost**: Optimized the conversion chains for OpenAI and Claude protocols, unified image configuration parsing, and hardened the context manager's robustness.
         -   **[Core Fix] State Sync Strategy Update**:
             -   **Consistency**: Improved the immediate application logic for themes and resolved conflicts between `App.tsx` and `Settings.tsx`, ensuring UI consistency during configuration loading.
     *   **v3.3.48 (2026-01-21)**:

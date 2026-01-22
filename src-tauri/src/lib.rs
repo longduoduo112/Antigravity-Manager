@@ -7,7 +7,7 @@ pub mod error;
 
 use tauri::Manager;
 use modules::logger;
-use tracing::{info, error};
+use tracing::{info, warn, error};
 
 /// Increase file descriptor limit for macOS to prevent "Too many open files" errors
 #[cfg(target_os = "macos")]
