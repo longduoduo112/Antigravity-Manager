@@ -213,6 +213,10 @@ print(response.choices[0].message.content)
 
 *   **Changelog**:
     *   **v3.3.49 (2026-01-22)**:
+        -   **[Core Fix] Removed Flash Lite Model to Fix 429 Errors**:
+            -   **Issue**: Observed that `gemini-2.5-flash-lite` is frequently returning 429 errors today due to **Upstream Google Container Capacity Exhausted** (MODEL_CAPACITY_EXHAUSTED), rather than standard account quota limits.
+            -   **Urgent Fix**: Replaced all internal `gemini-2.5-flash-lite` calls (e.g., background title generation, L3 summary compression) and preset mappings with the more stable `gemini-2.5-flash`.
+            -   **User Notice**: If you explicitly used `gemini-2.5-flash-lite` in "Custom Mappings" or "Presets", please update it to another model immediately, or you may continue to experience 429 errors.
         -   **[UX Optimization] Immediate Effect of Settings (Fix PR #949)**:
             -   **Instant Apply**: Fixed an issue where language changes required manual saving. Adjustments now apply immediately across the UI.
         -   **[Code Cleanup] Backend Architecture Refactoring & Optimization (PR #950)**:
@@ -237,10 +241,6 @@ print(response.choices[0].message.content)
             -   **Security Hardening**: Removed automatic deletion logic on load failure, preventing accidental loss of account indexes during environment anomalies or upgrades.
         -   **[Feature] Deep Optimization of Router & Model Mapping (PR #954)**:
             -   **Deterministic Router Priority**: Resolved non-deterministic matching issues for multi-wildcard patterns by implementing a priority system based on pattern specificity.
-            -   **Claude/OpenAI Mapper Enhancements**: Refactored the Streaming Processor and Collector to address Thinking signature loss during context compression.
-            -   **Context Estimation Calibration**: Optimized the `EstimationCalibrator` algorithm for improved token estimation accuracy in long-context scenarios.
-            -   **JSON Schema Purifier Upgrade**: Enhanced deep cleaning for complex JSON Schemas to ensure 100% compatibility with upstream APIs.
-            -   **i18n Synchronization**: Updated localization resources across 8 languages (ZH, EN, JA, PT, RU, TR, VI, ZH-TW).
 
         -   **[Stability] OAuth Callback & Parsing Enhancement (Fix #931, #850, #778)**:
             -   **Robust Parsing**: Optimized the local callback server's URL parsing logic to improve compatibility across different browsers.
@@ -248,10 +248,7 @@ print(response.choices[0].message.content)
         -   **[Optimization] OAuth Communication Quality (Issue #948, #887)**:
             -   **Timeout Extension**: Increased auth request timeouts to 60 seconds to significantly improve token exchange success rates in proxy environments.
             -   **Error Guidance**: Provided clear guidance for Google API connectivity issues, helping users troubleshoot proxy settings.
-            -   **[Core Fix] Removed Flash Lite Model to Fix 429 Errors**:
-                -   **Issue**: Observed that `gemini-2.5-flash-lite` is frequently returning 429 errors today due to **Upstream Google Container Capacity Exhausted** (MODEL_CAPACITY_EXHAUSTED), rather than standard account quota limits.
-                -   **Urgent Fix**: Replaced all internal `gemini-2.5-flash-lite` calls (e.g., background title generation, L3 summary compression) and preset mappings with the more stable `gemini-2.5-flash`.
-                -   **User Notice**: If you explicitly used `gemini-2.5-flash-lite` in "Custom Mappings" or "Presets", please update it to another model immediately, or you may continue to experience 429 errors.
+
     *   **v3.3.48 (2026-01-21)**:
         -   **[Core Fix] Windows Console Flashing Fix (Fix PR #933)**:
             -   **Problem**: On Windows, launching the application or executing background CLI commands would sometimes cause a command prompt window to briefly flash, disrupting the user experience.
